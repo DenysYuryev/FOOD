@@ -200,38 +200,55 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const getResource = async (url) => {
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            throw new Error(`Помилка передачі даних ${url}, статус: ${res.status}`);
+        }
+
+        return await res.json();
+    };
+
+    getResource("http://localhost:3000/menu")
+        .then(data => {
+            data.forEach(({img, altimg, title, descr, price}) => {
+                new MenuCard(img, altimg, title, descr, price, '.menu .container').render();
+            });
+        });
+
     // const div = new MenuCard();
     // div.render();
 
-    // Fitnes menu
-    new MenuCard(
-        'img/tabs/vegy.jpg',
-        'vegy',
-        'Меню "Фитнес"',
-        'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-        9,                  // ціна в $
-        '.menu .container',  // батьківські елементи
-    ).render();             // виклик методу тільки одноразово
+    // // Fitnes menu
+    // new MenuCard(
+    //     'img/tabs/vegy.jpg',
+    //     'vegy',
+    //     'Меню "Фитнес"',
+    //     'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
+    //     9,                  // ціна в $
+    //     '.menu .container',  // батьківські елементи
+    // ).render();             // виклик методу тільки одноразово
 
-    // Premium menu
-    new MenuCard(
-        'img/tabs/elite.jpg',
-        'elite',
-        'Меню "Премиум"',
-        'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-        20,                  // ціна в $
-        '.menu .container',  // батьківські елементи
-    ).render();             // виклик методу тільки одноразово
+    // // Premium menu
+    // new MenuCard(
+    //     'img/tabs/elite.jpg',
+    //     'elite',
+    //     'Меню "Премиум"',
+    //     'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
+    //     20,                  // ціна в $
+    //     '.menu .container',  // батьківські елементи
+    // ).render();             // виклик методу тільки одноразово
 
-    // Post menu
-    new MenuCard(
-        'img/tabs/post.jpg',
-        'post',
-        'Меню "Постное"',
-        'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-        16,                  // ціна в $
-        '.menu .container',  // батьківські елементи
-    ).render();             // виклик методу тільки одноразово
+    // // Post menu
+    // new MenuCard(
+    //     'img/tabs/post.jpg',
+    //     'post',
+    //     'Меню "Постное"',
+    //     'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
+    //     16,                  // ціна в $
+    //     '.menu .container',  // батьківські елементи
+    // ).render();             // виклик методу тільки одноразово
 
     // 
     // Forms
@@ -245,10 +262,23 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     forms.forEach(item => {
-        postData(item);
+        bindPostData(item);
     });
 
-    function postData(form) {
+    // запит до серверу з використанням операторів async/await
+    const postData = async (url, data) => {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: data      // JSON.stringify(object) //formData
+        });
+
+        return await res.json();
+    };
+
+    function bindPostData(form) {
         form.addEventListener('submit', (event) => {
             event.preventDefault();
 
@@ -273,23 +303,26 @@ window.addEventListener('DOMContentLoaded', () => {
             // request.setRequestHeader('Content-type', 'application/json; charset=utf-8');
             const formData = new FormData(form);
 
-            const object = {};
-            formData.forEach(function(value, key) {
-                object[key] = value;
-            });
+            // const object = {};
+            // formData.forEach(function(value, key) {
+            //     object[key] = value;
+            // });
+
+            const jsonData = JSON.stringify(Object.fromEntries(formData.entries()));
 
             // const json = JSON.stringify(object);
 
             // request.send(json);
 
-            fetch('server.php', {
-                method: "POST",
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(object) //formData
-            })
-            .then(data => data.text())
+            // fetch('server.php', {
+            //     method: "POST",
+            //     headers: {
+            //         'Content-type': 'application/json'
+            //     },
+            //     body: JSON.stringify(object) //formData
+            // })
+            postData("http://localhost:3000/requests", jsonData)            // JSON.stringify(object)
+            // .then(data => data.text())
             .then(data => {
                 console.log(data);
                 showThanksModal(message.success);
@@ -353,6 +386,7 @@ window.addEventListener('DOMContentLoaded', () => {
     //
     // Fetch API
     //
+    /*
     fetch('https://jsonplaceholder.typicode.com/todos/1', {
         method: "POST",
         body: JSON.stringify({name: 'Alex'}),
@@ -362,6 +396,14 @@ window.addEventListener('DOMContentLoaded', () => {
     })
         .then(response => response.json())
         .then(json => console.log(json));
+    */
+
+    //
+    // json-srver
+    //
+    fetch("http://localhost:3000/menu")             // db.json
+        .then(data => data.json())
+        .then(result => console.log(result));
 });
 
 
