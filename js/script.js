@@ -557,6 +557,114 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // calc ratio
+    const result = document.querySelector('.calculating__result span');
+    let sex,
+        height, weight, age, 
+        ratio;
+
+    if (localStorage.getItem('sex')) {
+        sex = localStorage.getItem('sex');
+    } else {
+        sex = 'female';
+        localStorage.setItem('sex', 'female');
+    }
+
+    if (localStorage.getItem('ratio')) {
+        ratio = localStorage.getItem('ratio');
+    } else {
+        ratio = 1.375;
+        localStorage.setItem('ratio', 1.375);
+    }
+
+    function initLocalSettings(selector, activeClass) {
+        const elements = document.querySelectorAll(selector);
+        
+        elements.forEach(element => {
+            element.classList.remove(activeClass);
+            if (element.getAttribute('id') === localStorage.getItem('sex')) {
+                element.classList.add(activeClass);
+            } else if (element.getAttribute('data-ratio') === localStorage.getItem('ratio')) {
+                element.classList.add(activeClass);
+            }
+        });
+    }
+
+    initLocalSettings('#gender div', 'calculating__choose-item_active');                    // для блоку статі
+    initLocalSettings('.calculating__choose_big div', 'calculating__choose-item_active');
+
+    function calcTotal () {
+        if (sex && height && weight && age && ratio) {
+            if (sex === 'female') {
+                result.textContent = Math.round(ratio * (447.6 + (weight * 9.2) + (height * 3.1) - (age * 4.3)));
+                
+            } else {
+                result.textContent = Math.round(ratio * (88.36 + (weight *13.4) + (height * 4.8) - (age * 5.7)));
+            }
+        } else {
+            result.textContent = '_____';
+            return;
+        }
+    }
+    calcTotal();
+
+    function getStaicInfo(parentSelector, activeClassName) {
+        const elements = document.querySelectorAll(`${parentSelector} div`);    // отримання тегів всередині бітьківського елементу заголовку
+
+        elements.forEach(element => {
+            element.addEventListener('click', (event) => {
+                if (event.target.getAttribute('data-ratio')) {
+                    ratio = +event.target.getAttribute('data-ratio');
+                    localStorage.setItem('ratio', ratio);
+                } else {
+                    sex = event.target.getAttribute('id');
+                    localStorage.setItem('sex', sex);
+                }
+                // console.log(ratio, sex);
+    
+                elements.forEach(element => {
+                    element.classList.remove(activeClassName);
+                });
+    
+                event.target.classList.add(activeClassName);
+                
+                calcTotal();
+            });
+        });
+    }
+
+    getStaicInfo('#gender', 'calculating__choose-item_active');                    // для блоку статі
+    getStaicInfo('.calculating__choose_big', 'calculating__choose-item_active');   // для блоку активності
+
+    function getDynamicInformation(selector) {
+        const input = document.querySelector(selector);
+
+        input.addEventListener('input', () => {
+
+            if (input.value.match(/\D/g)) {
+                input.style.border = '2px solid red';
+            } else {
+                input.style.border = 'none';
+            }
+
+            switch(input.getAttribute('id',)) {
+                case 'height':
+                    height = +input.value;
+                    break;
+                case 'weight':
+                    weight = +input.value;
+                    break;
+                case 'age':
+                    age = +input.value;
+                    break;
+            }
+            calcTotal();
+        });
+    }
+
+    getDynamicInformation('#height');
+    getDynamicInformation('#weight');
+    getDynamicInformation('#age');
 });
 
 
